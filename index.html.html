@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>亲子盲盒聊聊卡</title>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #ffe5ec 0%, #ffd6a5 35%, #fdffb6 70%, #caffbf 100%);
+    background-attachment: fixed;
+    color: #5a3a2e;
+    overflow-x: hidden;
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 20px 16px 120px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  header h1 {
+    font-size: 28px;
+    margin: 8px 0 4px;
+    color: #ff7a8a;
+    text-shadow: 2px 2px 0 #fff, 4px 4px 0 rgba(255, 122, 138, 0.15);
+    letter-spacing: 2px;
+  }
+
+  header p {
+    font-size: 14px;
+    margin: 0;
+    color: #8a6a5e;
+  }
+
+  .hint {
+    text-align: center;
+    font-size: 13px;
+    color: #8a6a5e;
+    margin: 6px 0 18px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    padding: 6px 14px;
+    align-self: center;
+  }
+
+  .boxes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .boxes .box:nth-child(5) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 8px);
+  }
+
+  .box {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    box-shadow: 0 8px 0 rgba(0, 0, 0, 0.08), 0 12px 24px rgba(0, 0, 0, 0.12);
+    transition: transform 0.15s ease;
+    overflow: hidden;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .box::before {
+    content: "";
+    position: absolute;
+    top: 45%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  .box::after {
+    content: "";
+    position: absolute;
+    top: calc(45% - 14px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 8px 8px 4px 4px;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .box .emoji {
+    font-size: 38px;
+    margin-bottom: 4px;
+    filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.1));
+    margin-top: -8px;
+  }
+
+  .box .name {
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 20px;
+  }
+
+  .box-pink { background: linear-gradient(160deg, #ff9ab0, #ff6b88); }
+  .box-blue { background: linear-gradient(160deg, #8ec5ff, #5a9cff); }
+  .box-purple { background: linear-gradient(160deg, #c7a8ff, #9b7bff); }
+  .box-green { background: linear-gradient(160deg, #a8e6a3, #6fcf6f); }
+  .box-orange { background: linear-gradient(160deg, #ffc46b, #ff8e3c); }
+
+  .box:active {
+    transform: translateY(2px);
+  }
+
+  .box.shake {
+    animation: shake 0.6s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: rotate(0deg) translateY(0); }
+    15% { transform: rotate(-8deg) translateY(-4px); }
+    30% { transform: rotate(7deg) translateY(-6px); }
+    45% { transform: rotate(-6deg) translateY(-4px); }
+    60% { transform: rotate(5deg) translateY(-2px); }
+    75% { transform: rotate(-3deg) translateY(-1px); }
+  }
+
+  .record {
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(255, 122, 138, 0.15);
+    margin-top: auto;
+  }
+
+  .record h2 {
+    margin: 0 0 10px;
+    font-size: 18px;
+    color: #ff7a8a;
+  }
+
+  .stars-row {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .star-slot {
+    font-size: 34px;
+    filter: grayscale(1) opacity(0.4);
+    transition: all 0.5s ease;
+  }
+
+  .star-slot.lit {
+    filter: grayscale(0) opacity(1);
+    animation: starPop 0.6s ease;
+  }
+
+  @keyframes starPop {
+    0% { transform: scale(0.3) rotate(-180deg); }
+    60% { transform: scale(1.4) rotate(20deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .trophy {
+    margin-top: 8px;
+    font-size: 60px;
+    display: none;
+    animation: trophyShow 1s ease;
+  }
+
+  .trophy.show {
+    display: block;
+  }
+
+  .trophy-text {
+    font-size: 16px;
+    color: #ff7a8a;
+    font-weight: bold;
+    display: none;
+    margin-top: 4px;
+  }
+
+  .trophy-text.show {
+    display: block;
+  }
+
+  @keyframes trophyShow {
+    0% { transform: scale(0) rotate(-360deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .reset-btn {
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    border-radius: 16px;
+    padding: 8px 18px;
+    font-size: 13px;
+    color: #8a6a5e;
+    cursor: pointer;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .reset-btn:active {
+    transform: translateY(1px);
+  }
+
+  /* 遮罩层 */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(80, 40, 60, 0.55);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .overlay.show {
+    display: flex;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .card {
+    width: 100%;
+    max-width: 340px;
+    background: #fff;
+    border-radius: 28px;
+    padding: 26px 22px 22px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    position: relative;
+    animation: cardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes cardIn {
+    0% { transform: scale(0.3) rotate(-15deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .card .card-emoji {
+    font-size: 56px;
+    margin-bottom: 8px;
+    display: inline-block;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .card .card-cat {
+    font-size: 18px;
+    color: #fff;
+    background: #ff9ab0;
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+    letter-spacing: 1px;
+  }
+
+  .card .card-text {
+    font-size: 19px;
+    line-height: 1.7;
+    color: #5a3a2e;
+    margin: 10px 6px 22px;
+    min-height: 70px;
+    font-weight: 500;
+  }
+
+  .done-btn {
+    background: linear-gradient(135deg, #ffb347, #ff7a8a);
+    color: #fff;
+    border: none;
+    border-radius: 30px;
+    padding: 14px 36px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 6px 0 rgba(255, 122, 138, 0.35), 0 8px 20px rgba(255, 122, 138, 0.4);
+    cursor: pointer;
+    letter-spacing: 2px;
+  }
+
+  .done-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0 rgba(255, 122, 138, 0.35);
+  }
+
+  /* 撒花效果 */
+  .confetti-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 200;
+    overflow: hidden;
+  }
+
+  .confetti {
+    position: absolute;
+    font-size: 28px;
+    animation: confettiFall 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+    will-change: transform, opacity;
+  }
+
+  @keyframes confettiFall {
+    0% {
+      transform: translate(0, 0) rotate(0deg) scale(0.2);
+      opacity: 1;
+    }
+    100% {
+      transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1);
+      opacity: 0;
+    }
+  }
+
+  /* 大号鼓励文字 */
+  .big-praise {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 38px;
+    font-weight: bold;
+    color: #ff7a8a;
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 rgba(255, 183, 71, 0.5);
+    z-index: 250;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .big-praise.show {
+    animation: praisePop 1.6s ease forwards;
+  }
+
+  @keyframes praisePop {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-20deg); opacity: 0; }
+    30% { transform: translate(-50%, -50%) scale(1.2) rotate(8deg); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1) rotate(-4deg); }
+    80% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.9) rotate(0deg); opacity: 0; }
+  }
+
+  @media (max-width: 360px) {
+    .box { font-size: 18px; }
+    .box .name { font-size: 17px; }
+    .box .emoji { font-size: 32px; }
+    header h1 { font-size: 24px; }
+    .card .card-text { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>亲子盲盒聊聊卡</h1>
+    <p>选一个盲盒，开始今天的小冒险吧～</p>
+  </header>
+
+  <div class="hint">👆 点一点彩色盒子</div>
+
+  <div class="boxes" id="boxes">
+    <div class="box box-pink" data-cat="chat">
+      <span class="emoji">💬</span>
+      <span class="name">聊天卡</span>
+    </div>
+    <div class="box box-blue" data-cat="emotion">
+      <span class="emoji">🌈</span>
+      <span class="name">情绪卡</span>
+    </div>
+    <div class="box box-purple" data-cat="night">
+      <span class="emoji">🌙</span>
+      <span class="name">晚安卡</span>
+    </div>
+    <div class="box box-green" data-cat="coop">
+      <span class="emoji">🤝</span>
+      <span class="name">合作卡</span>
+    </div>
+    <div class="box box-orange" data-cat="move">
+      <span class="emoji">🐸</span>
+      <span class="name">动起来</span>
+    </div>
+  </div>
+
+  <div class="record">
+    <h2>🎀 今日记录 🎀</h2>
+    <div class="stars-row" id="starsRow">
+      <span class="star-slot">⭐</span>
+      <span class="star-slot">⭐</span>
+      <span class="star-slot">⭐</span>
+      <span class="star-slot">⭐</span>
+      <span class="star-slot">⭐</span>
+    </div>
+    <div class="trophy" id="trophy">🏆</div>
+    <div class="trophy-text" id="trophyText">恭喜集齐 5 颗小星星！</div>
+    <button class="reset-btn" id="resetBtn">重新开始记录</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="card">
+    <div class="card-emoji" id="cardEmoji">🎁</div>
+    <div class="card-cat" id="cardCat">聊天卡</div>
+    <div class="card-text" id="cardText">题目内容</div>
+    <button class="done-btn" id="doneBtn">完成啦</button>
+  </div>
+</div>
+
+<div class="confetti-layer" id="confettiLayer"></div>
+<div class="big-praise" id="bigPraise">🌟 太棒啦！🌟</div>
+
+<script>
+(function () {
+  const QUESTIONS = {
+    chat: {
+      name: "聊天卡",
+      color: "#ff7a8a",
+      emoji: "💬",
+      list: [
+        "最近我俩特别开心是什么时候？",
+        "如果妈妈可以变成一种动物，你希望我变成什么？",
+        "你今天在幼儿园和谁玩得最开心？",
+        "如果有一颗魔法糖果，你想用它实现什么愿望？",
+        "你最喜欢家里哪一个角落？为什么？",
+        "如果可以请一个朋友来家里吃饭，你想请谁？",
+        "今天有没有一件小事让你笑出来？"
+      ]
+    },
+    emotion: {
+      name: "情绪卡",
+      color: "#5a9cff",
+      emoji: "🌈",
+      list: [
+        "今天你有什么样的心情？像什么颜色？",
+        "学一个生气的表情，再学一个开心的表情。",
+        "如果难过是一只小动物，它长什么样子？",
+        "用一个抱抱告诉对方：我现在很爱你。",
+        "你今天有没有遇到让你有点担心的事？说说看。",
+        "把今天最开心的瞬间画在空气里给对方看。",
+        "心里像气球一样飘飘的，是什么感觉？"
+      ]
+    },
+    night: {
+      name: "晚安卡",
+      color: "#9b7bff",
+      emoji: "🌙",
+      list: [
+        "闭上眼睛，想象我们在云朵上飘……",
+        "数一数今天收到了几个抱抱？",
+        "说出今天最想感谢的一件小事。",
+        "悄悄告诉对方：明天最期待做什么？",
+        "一起轻轻数 10 颗小星星，再说晚安。",
+        "用手心轻轻贴在对方额头上，说一句温柔的话。",
+        "今天有没有一件事让你觉得很温暖？"
+      ]
+    },
+    coop: {
+      name: "合作卡",
+      color: "#6fcf6f",
+      emoji: "🤝",
+      list: [
+        "我们一起把地上的玩具收进箱子里，你拿一个，我拿一个。",
+        "一起搭积木，你放一块，我放一块。",
+        "一起折一只小纸船或小飞机。",
+        "合作给娃娃讲一个故事，你说一句，我说一句。",
+        "一起给家里的植物浇水，看谁更温柔。",
+        "两个人用同一支笔，一起画一只小动物。",
+        "牵着手走过房间，不能松开哦。"
+      ]
+    },
+    move: {
+      name: "动起来",
+      color: "#ff8e3c",
+      emoji: "🐸",
+      list: [
+        "孩子教家长做一个动作，家长要认真学，然后交换角色。",
+        "我们一起学青蛙跳，看谁跳得远。",
+        "一起原地转 3 圈，再做一个最帅的造型。",
+        "学小猫走路，悄悄地从客厅走到沙发。",
+        "比一比谁能单脚站立得久。",
+        "跟着节奏拍拍手、跺跺脚，做一段小舞蹈。",
+        "学大象走路，再学小蚂蚁走路。"
+      ]
+    }
+  };
+
+  const overlay = document.getElementById("overlay");
+  const cardEmoji = document.getElementById("cardEmoji");
+  const cardCat = document.getElementById("cardCat");
+  const cardText = document.getElementById("cardText");
+  const doneBtn = document.getElementById("doneBtn");
+  const boxes = document.querySelectorAll(".box");
+  const starSlots = document.querySelectorAll(".star-slot");
+  const trophy = document.getElementById("trophy");
+  const trophyText = document.getElementById("trophyText");
+  const resetBtn = document.getElementById("resetBtn");
+  const confettiLayer = document.getElementById("confettiLayer");
+  const bigPraise = document.getElementById("bigPraise");
+
+  let currentBox = null;
+  let starCount = parseInt(localStorage.getItem("blindbox_stars") || "0", 10);
+  if (starCount > 5) starCount = 5;
+  updateStars();
+
+  boxes.forEach(box => {
+    box.addEventListener("click", () => {
+      if (overlay.classList.contains("show")) return;
+      if (box.classList.contains("shake")) return;
+      currentBox = box;
+      box.classList.add("shake");
+      setTimeout(() => {
+        box.classList.remove("shake");
+        showCard(box.dataset.cat);
+      }, 600);
+    });
+  });
+
+  function showCard(cat) {
+    const data = QUESTIONS[cat];
+    const q = data.list[Math.floor(Math.random() * data.list.length)];
+    cardEmoji.textContent = data.emoji;
+    cardCat.textContent = data.name;
+    cardCat.style.background = data.color;
+    cardText.textContent = q;
+    overlay.classList.add("show");
+  }
+
+  doneBtn.addEventListener("click", () => {
+    overlay.classList.remove("show");
+    launchConfetti();
+    playDing();
+    showPraise();
+    addStar();
+  });
+
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove("show");
+    }
+  });
+
+  function addStar() {
+    if (starCount >= 5) return;
+    starCount++;
+    localStorage.setItem("blindbox_stars", String(starCount));
+    updateStars();
+  }
+
+  function updateStars() {
+    starSlots.forEach((s, i) => {
+      if (i < starCount) {
+        s.classList.add("lit");
+      } else {
+        s.classList.remove("lit");
+      }
+    });
+    if (starCount >= 5) {
+      trophy.classList.add("show");
+      trophyText.classList.add("show");
+    } else {
+      trophy.classList.remove("show");
+      trophyText.classList.remove("show");
+    }
+  }
+
+  resetBtn.addEventListener("click", () => {
+    starCount = 0;
+    localStorage.setItem("blindbox_stars", "0");
+    updateStars();
+  });
+
+  function launchConfetti() {
+    const symbols = ["⭐", "🌟", "✨", "💖", "🎉", "🌈", "🎈"];
+    const count = 28;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const cx = w / 2;
+    const cy = h / 2;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement("div");
+      el.className = "confetti";
+      el.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 120 + Math.random() * 220;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist + 100;
+      const rot = (Math.random() * 720 - 360) + "deg";
+      el.style.left = cx + "px";
+      el.style.top = cy + "px";
+      el.style.setProperty("--dx", dx + "px");
+      el.style.setProperty("--dy", dy + "px");
+      el.style.setProperty("--rot", rot);
+      el.style.fontSize = (20 + Math.random() * 22) + "px";
+      el.style.animationDelay = (Math.random() * 0.15) + "s";
+      confettiLayer.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    }
+  }
+
+  function showPraise() {
+    const messages = [
+      "🌟 太棒啦！🌟",
+      "🎉 真厉害！🎉",
+      "💖 你最可爱 💖",
+      "✨ 完成啦！✨",
+      "🌈 好开心呀 🌈"
+    ];
+    bigPraise.textContent = messages[Math.floor(Math.random() * messages.length)];
+    bigPraise.classList.remove("show");
+    void bigPraise.offsetWidth;
+    bigPraise.classList.add("show");
+  }
+
+  // 简易叮咚声（Web Audio）
+  let audioCtx = null;
+  function playDing() {
+    try {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return;
+        audioCtx = new Ctx();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      // 两个音：叮 + 咚
+      playTone(880, now, 0.18);
+      playTone(1320, now + 0.12, 0.22);
+    } catch (e) { /* ignore */ }
+  }
+
+  function playTone(freq, startTime, duration) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(freq, startTime);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(0.25, startTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+  }
+
+  // 第一次触屏时解锁音频
+  document.addEventListener("touchstart", function unlock() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx && !audioCtx) {
+        audioCtx = new Ctx();
+        audioCtx.resume();
+      }
+    } catch (e) { /* ignore */ }
+    document.removeEventListener("touchstart", unlock);
+  }, { once: true });
+})();
+</script>
+</body>
+</html>
